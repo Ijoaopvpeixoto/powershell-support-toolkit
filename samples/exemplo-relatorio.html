@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Diagn&oacute;stico - PC-EXEMPLO</title>
+<style>body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
+h1{margin-bottom:0}
+h2{margin-top:28px;border-bottom:2px solid #ddd;padding-bottom:4px}
+.sub{color:#666;margin-top:4px}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:14px}
+th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}
+th{background:#f3f3f3}
+tr.ok td{background:#e8f6ec}
+tr.atencao td{background:#fff4d6}
+tr.critico td{background:#fde2e2}
+.vazio{color:#666;font-style:italic}</style>
+</head>
+<body>
+<h1>Relat&oacute;rio de diagn&oacute;stico</h1>
+<p class="sub">Computador: PC-EXEMPLO &middot; Gerado em 06/11/2026 16:57:37</p>
+
+<h2>Resumo</h2>
+<table><thead><tr><th>Nivel</th><th>Item</th><th>Detalhe</th></tr></thead><tbody><tr class="atencao"><td>ATENCAO</td><td>Disco</td><td>C: com 12% livre (28.5 GB)</td></tr><tr class="ok"><td>OK</td><td>Memoria</td><td>22.2% livre (2.2 GB de 9.9 GB)</td></tr><tr class="ok"><td>OK</td><td>Uptime</td><td>1 dias desde o ultimo boot</td></tr><tr class="critico"><td>CRITICO</td><td>Conectividade</td><td>Falhou: DNS publico</td></tr><tr class="ok"><td>OK</td><td>Servicos</td><td>Servicos criticos em execucao</td></tr><tr class="ok"><td>OK</td><td>Eventos</td><td>3 erros nas ultimas 24 h</td></tr></tbody></table>
+
+<h2>Sistema</h2>
+<table><thead><tr><th>Computador</th><th>Sistema</th><th>Versao</th><th>UptimeDias</th><th>Processador</th><th>Nucleos</th><th>RamTotalGB</th><th>RamLivreGB</th></tr></thead><tbody><tr class=""><td>PC-EXEMPLO</td><td>Microsoft Windows 11 Home</td><td>10.0.26200</td><td>1</td><td>AMD Ryzen 5 5500U with Radeon Graphics         </td><td>6</td><td>9.9</td><td>2.2</td></tr></tbody></table>
+
+<h2>Disco</h2>
+<table><thead><tr><th>DeviceID</th><th>TamanhoGB</th><th>LivreGB</th><th>LivrePct</th></tr></thead><tbody><tr class="atencao"><td>C:</td><td>237.5</td><td>28.5</td><td>12</td></tr></tbody></table>
+
+<h2>Rede</h2>
+<table><thead><tr><th>Interface</th><th>IPv4</th><th>Gateway</th><th>DNS</th></tr></thead><tbody><tr class=""><td>Wi-Fi</td><td>192.168.x.x</td><td>192.168.x.x</td><td>2804:xxxx, 2804:xxxx, 1.1.1.1, 1.0.0.1</td></tr></tbody></table>
+
+<h2>Testes de conectividade</h2>
+<table><thead><tr><th>Teste</th><th>Alvo</th><th>Ok</th></tr></thead><tbody><tr class="ok"><td>Gateway (ping)</td><td>192.168.x.x</td><td>True</td></tr><tr class="ok"><td>Internet por IP (ping)</td><td>8.8.8.8</td><td>True</td></tr><tr class="ok"><td>DNS do sistema</td><td>google.com</td><td>True</td></tr><tr class="critico"><td>DNS publico</td><td>google.com via 8.8.8.8</td><td>False</td></tr><tr class="ok"><td>HTTPS (porta 443)</td><td>google.com</td><td>True</td></tr></tbody></table>
+
+<h2>Servi&ccedil;os cr&iacute;ticos</h2>
+<table><thead><tr><th>Servico</th><th>Nome</th><th>Status</th><th>Inicio</th></tr></thead><tbody><tr class="ok"><td>Dnscache</td><td>Cliente DNS</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>Dhcp</td><td>Cliente DHCP</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>WlanSvc</td><td>Configura&#231;&#227;o Autom&#225;tica de WLAN</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>EventLog</td><td>Log de Eventos do Windows</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>Winmgmt</td><td>Testador de instrumenta&#231;&#227;o de gerenciam. do Windows</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>mpssvc</td><td>Windows Defender Firewall</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>WinDefend</td><td>Servi&#231;o Microsoft Defender Antiv&#237;rus</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>Spooler</td><td>Spooler de Impress&#227;o</td><td>Running</td><td>Automatic</td></tr><tr class="ok"><td>LanmanWorkstation</td><td>Esta&#231;&#227;o de trabalho</td><td>Running</td><td>Automatic</td></tr></tbody></table>
+
+<h2>Erros recentes (&uacute;ltimas 24 h)</h2>
+<table><thead><tr><th>Hora</th><th>Origem</th><th>Id</th><th>Mensagem</th></tr></thead><tbody><tr class=""><td>05/11 20:22</td><td>Volsnap</td><td>35</td><td>As c&#243;pias de sombra do volume C: foram anuladas porque o armazename...</td></tr><tr class=""><td>05/11 20:16</td><td>Microsoft-Windows-DistributedCOM</td><td>10010</td><td>O servidor {6D40BDAD-BF13-535B-BC3B-EEEE65B1D745} n&#227;o se registrou ...</td></tr><tr class=""><td>05/11 20:02</td><td>Application Hang</td><td>1002</td><td>O programa Slack.exe vers&#227;o 4.51.180.0 interagiu com o Windows e fo...</td></tr></tbody></table>
+
+<p class="sub">Gerado por Get-SystemDiagnostic.ps1 &middot; somente leitura, nada foi alterado no computador.</p>
+</body>
+</html>
+

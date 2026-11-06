@@ -123,11 +123,167 @@ function Get-RecentErrors {
                       }}
 }
 
-$rede = Get-NetworkSummary
+function New-Finding {
+    param([string]$Nivel, [string]$Item, [string]$Detalhe)
+    [PSCustomObject]@{ Nivel = $Nivel; Item = $Item; Detalhe = $Detalhe }
+}
 
-Get-SystemSummary | Format-List
-Get-DiskSummary   | Format-Table -AutoSize
-$rede             | Format-List
-Test-ConnectivityLadder -Gateway $rede.Gateway | Format-Table -AutoSize
-Get-CriticalServices | Format-Table -AutoSize
-Get-RecentErrors     | Format-Table -AutoSize
+function Get-Findings {
+    param($Sistema, $Discos, $Testes, $Servicos, $Erros)
+
+    $f = @()
+
+    foreach ($d in @($Discos)) {
+        $txt = "$($d.DeviceID) com $($d.LivrePct)% livre ($($d.LivreGB) GB)"
+        if     ($d.LivrePct -lt 10) { $f += New-Finding 'CRITICO' 'Disco' $txt }
+        elseif ($d.LivrePct -lt 20) { $f += New-Finding 'ATENCAO' 'Disco' $txt }
+        else                        { $f += New-Finding 'OK' 'Disco' $txt }
+    }
+
+    $ramPct = [math]::Round(($Sistema.RamLivreGB / $Sistema.RamTotalGB) * 100, 1)
+    $txt = "$ramPct% livre ($($Sistema.RamLivreGB) GB de $($Sistema.RamTotalGB) GB)"
+    if     ($ramPct -lt 10) { $f += New-Finding 'CRITICO' 'Memoria' $txt }
+    elseif ($ramPct -lt 20) { $f += New-Finding 'ATENCAO' 'Memoria' $txt }
+    else                    { $f += New-Finding 'OK' 'Memoria' $txt }
+
+    if ($Sistema.UptimeDias -gt 14) {
+        $f += New-Finding 'ATENCAO' 'Uptime' "$($Sistema.UptimeDias) dias sem reiniciar"
+    } else {
+        $f += New-Finding 'OK' 'Uptime' "$($Sistema.UptimeDias) dias desde o ultimo boot"
+    }
+
+    $falhas = @($Testes | Where-Object { -not $_.Ok })
+    if ($falhas.Count -gt 0) {
+        $f += New-Finding 'CRITICO' 'Conectividade' ('Falhou: ' + (($falhas | ForEach-Object { $_.Teste }) -join ', '))
+    } else {
+        $f += New-Finding 'OK' 'Conectividade' 'Todos os testes passaram'
+    }
+
+    $parados = @($Servicos | Where-Object { $_.Inicio -eq 'Automatic' -and $_.Status -ne 'Running' })
+    if ($parados.Count -gt 0) {
+        $f += New-Finding 'ATENCAO' 'Servicos' ('Parados: ' + (($parados | ForEach-Object { $_.Servico }) -join ', '))
+    } else {
+        $f += New-Finding 'OK' 'Servicos' 'Servicos criticos em execucao'
+    }
+
+    $n = @($Erros | Where-Object { $_ }).Count
+    if ($n -ge 10) {
+        $f += New-Finding 'ATENCAO' 'Eventos' "$n erros nas ultimas 24 h"
+    } else {
+        $f += New-Finding 'OK' 'Eventos' "$n erros nas ultimas 24 h"
+    }
+
+    $f
+}
+
+function ConvertTo-HtmlTable {
+    param($Data, [scriptblock]$RowClass)
+
+    $items = @($Data | Where-Object { $_ })
+    if ($items.Count -eq 0) { return '<p class="vazio">Nenhum registro encontrado.</p>' }
+
+    $cols = $items[0].PSObject.Properties.Name
+    $html = '<table><thead><tr>'
+    foreach ($c in $cols) {
+        $html += '<th>' + [System.Net.WebUtility]::HtmlEncode($c) + '</th>'
+    }
+    $html += '</tr></thead><tbody>'
+
+    foreach ($item in $items) {
+        $cls = ''
+        if ($RowClass) { $cls = & $RowClass $item }
+        $html += '<tr class="' + $cls + '">'
+        foreach ($c in $cols) {
+            $html += '<td>' + [System.Net.WebUtility]::HtmlEncode([string]$item.$c) + '</td>'
+        }
+        $html += '</tr>'
+    }
+
+    $html + '</tbody></table>'
+}
+
+function New-HtmlReport {
+    param($Sistema, $Rede, $Discos, $Testes, $Servicos, $Erros, $Achados)
+
+    $css = 
+@'
+body{font-family:Segoe UI,Arial,sans-serif;margin:24px;color:#222}
+h1{margin-bottom:0}
+h2{margin-top:28px;border-bottom:2px solid #ddd;padding-bottom:4px}
+.sub{color:#666;margin-top:4px}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:14px}
+th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}
+th{background:#f3f3f3}
+tr.ok td{background:#e8f6ec}
+tr.atencao td{background:#fff4d6}
+tr.critico td{background:#fde2e2}
+.vazio{color:#666;font-style:italic}
+'@
+
+    $tResumo = ConvertTo-HtmlTable $Achados { param($i) $i.Nivel.ToLower() }
+    $tSist   = ConvertTo-HtmlTable $Sistema
+    $tDisco  = ConvertTo-HtmlTable $Discos { param($i) if ($i.LivrePct -lt 10) { 'critico' } elseif ($i.LivrePct -lt 20) { 'atencao' } else { 'ok' } }
+    $tRede   = ConvertTo-HtmlTable $Rede
+    $tTestes = ConvertTo-HtmlTable $Testes { param($i) if ($i.Ok) { 'ok' } else { 'critico' } }
+    $tServ   = ConvertTo-HtmlTable $Servicos { param($i) if ($i.Status -eq 'Running') { 'ok' } elseif ($i.Inicio -eq 'Automatic') { 'atencao' } else { '' } }
+    $tErros  = ConvertTo-HtmlTable $Erros
+    $quando  = Get-Date -Format 'dd/MM/yyyy HH:mm:ss'
+@"
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Diagn&oacute;stico - $($Sistema.Computador)</title>
+<style>$css</style>
+</head>
+<body>
+<h1>Relat&oacute;rio de diagn&oacute;stico</h1>
+<p class="sub">Computador: $($Sistema.Computador) &middot; Gerado em $quando</p>
+
+<h2>Resumo</h2>
+$tResumo
+
+<h2>Sistema</h2>
+$tSist
+
+<h2>Disco</h2>
+$tDisco
+
+<h2>Rede</h2>
+$tRede
+
+<h2>Testes de conectividade</h2>
+$tTestes
+
+<h2>Servi&ccedil;os cr&iacute;ticos</h2>
+$tServ
+
+<h2>Erros recentes (&uacute;ltimas 24 h)</h2>
+$tErros
+
+<p class="sub">Gerado por Get-SystemDiagnostic.ps1 &middot; somente leitura, nada foi alterado no computador.</p>
+</body>
+</html>
+"@
+}
+
+$sistema  = Get-SystemSummary
+$discos   = @(Get-DiskSummary)
+$rede     = Get-NetworkSummary
+$testes   = @(Test-ConnectivityLadder -Gateway $rede.Gateway)
+$servicos = @(Get-CriticalServices)
+$erros    = @(Get-RecentErrors)
+$achados  = @(Get-Findings -Sistema $sistema -Discos $discos -Testes $testes -Servicos $servicos -Erros $erros)
+
+$achados | Format-Table -AutoSize
+
+$html = New-HtmlReport -Sistema $sistema -Rede $rede -Discos $discos -Testes $testes -Servicos $servicos -Erros $erros -Achados $achados
+
+$pasta = Join-Path (Split-Path -Parent $PSScriptRoot) 'reports'
+if (-not (Test-Path $pasta)) { New-Item -ItemType Directory -Path $pasta | Out-Null }
+$nome    = 'diagnostico-{0}-{1}.html' -f $env:COMPUTERNAME, (Get-Date -Format 'yyyyMMdd-HHmm')
+$arquivo = Join-Path $pasta $nome
+$html | Set-Content -Path $arquivo -Encoding UTF8
+
+Write-Host "Relatorio salvo em: $arquivo"
+Invoke-Item $arquivo
