@@ -57,7 +57,7 @@ Os limites são decisões de projeto, e não padrões oficiais.
 Requisitos: Windows 10 ou 11 com Windows PowerShell 5.1 (já instalado). Não precisa de Administrador.
 
 ```powershell
-git clone <URL deste repositório>
+git clone <https://github.com/Ijoaopvpeixoto/powershell-support-toolkit.git>
 cd powershell-support-toolkit
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 .\scripts\Get-SystemDiagnostic.ps1
